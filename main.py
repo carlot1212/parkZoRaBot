@@ -5,6 +5,7 @@ import logging
 from dotenv import load_dotenv
 import os
 import webserver
+from string import Template
 load_dotenv()
 
 token = os.getenv('DISCORD_API_KEY')
@@ -18,7 +19,7 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 
 @bot.event
 async def on_ready():
-    Print(f"We are ready to go in, {bot.user.name}")
+    print(f"We are ready to go in, {bot.user.name}")
 
 @bot.event
 async def on_member_join(member):
@@ -31,38 +32,39 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
-@bot.command()
-async def harmonies(ctx, players, HARMONIES):  
+HARMONIES = [Template("How many tree points did $player get?"),
+            Template("How many mountain points did $player get?"),
+            Template("How many plains points did $player get?"),
+            Template("How many building points did $player get?"),
+            Template("How many river points did $player get?"),
+            Template("How many habitat points did $player get?"),
+            Template("How many special habitat points did $player get?"),
+            ]
 
-    def check(m):
-        # Only accept messages from the same user in the same channel
-        return m.author == ctx.author and m.channel == ctx.channel
-    
+@bot.command()
+async def harmonies(ctx):  
     thread = await ctx.message.create_thread(name="Harmonies Scoring")
 
-    thread.send("Who is playing?")
-    response = await bot.wait_for('message', timeout=300.0, check=check)
+    await thread.send("Who is playing?")
+    players_response = await bot.wait_for('message', timeout=300.0)
+    players = players_response.content.split(", ")
 
-    for question in questions:
+    player_scoring = {player: 0 for player in players}
+    for question in HARMONIES:
         for player in players:
-            await ctx.send(f"{player}, please answer the following question: {question}")
-            try:
-                # Wait for 30 seconds for a response
-                response = await bot.wait_for('message', timeout=300.0, check=check)
-                await ctx.send(f"You said: {response.content}")
-            except:
-                await ctx.send("You took too long!")
+            await thread.send(question.substitute(player=player))
+            response = await bot.wait_for('message', timeout=300.0)
+            points = int(response.content)
+            player_scoring[player] += points
 
-    await thread.send("How many tree points did Carlo getvfgyuj?") 
-    await ctx.send(f"Started a thread for harmonies scoring: {thread.mention}")
+    await thread.send(f"{players[0]} scored {player_scoring[players[0]]} points and {players[1]} scored {player_scoring[players[1]]} points.")
 
-HARMONIES = ["How many tree points did #{player} get?",
-            "How many mountain points did #{player} get?",
-            "How many plains points did #{player} get?",
-            "How many building points did #{player} get?",
-            "How many river points did #{player} get?",
-            "How many habitat points did #{player} get?"
-            ]
+    if player_scoring[players[0]] > player_scoring[players[1]]:
+        await thread.send(f"{players[0]} wins!")
+    elif player_scoring[players[1]] > player_scoring[players[0]]:
+        await thread.send(f"{players[1]} wins!")
+    else:
+        await thread.send("It's a tie!")
 
 webserver.keep_alive()
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
