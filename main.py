@@ -78,7 +78,7 @@ async def harmonies(ctx):
 
         total_points = {player: player_scoring[player]['Total Points'] for player in players}
         if list(total_points.values()).count(max(total_points.values())) == 1:
-            scoring_message += f"{max(total_points, key=total_points.get)} wins!"
+            scoring_message += f"{max(total_points, key=total_points.get).capitalize()} wins!"
         else:
             scoring_message += "It's a tie!"
 
