@@ -1,9 +1,13 @@
-import discord
-from discord.ext import commands
 import logging
 from dotenv import load_dotenv
 import os
 import webserver
+import datetime
+
+import discord
+from discord.ext import commands, tasks
+
+import aiocron
 
 from harmonies import harmonies as harmonies_scoring
 load_dotenv()
@@ -77,6 +81,20 @@ async def done(ctx):
 
     async for message in groceries_channel.history(limit=100):
         await message.add_reaction('✅')
+
+period_messages = [
+    "It's the menstrual phase. It's period week no more peenar.....unless!",
+    "It's the follicular phase. She's going back to normal!",
+    "It's the ovulation phase. It's peenar time!",
+    "It's the luteal phase. It's almost period week make sure to be extra nice!"
+]
+
+@aiocron.crontab('0 10 * * 1-5')
+async def period_reminder(ctx):
+    channel = discord.utils.get(ctx.guild.channels, name='general')
+    week_of_the_year = datetime.datetime.now().isocalendar()[1]
+    message = period_messages[week_of_the_year % len(period_messages)]
+    await channel.send(message)
 
 webserver.keep_alive()
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
