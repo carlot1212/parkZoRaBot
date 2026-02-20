@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from dotenv import load_dotenv
 import os
@@ -13,6 +14,7 @@ from harmonies import harmonies as harmonies_scoring
 load_dotenv()
 
 token = os.getenv('DISCORD_API_KEY')
+loop = asyncio.get_event_loop()
 
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode="w")
 intents = discord.Intents.default()
@@ -89,12 +91,21 @@ period_messages = [
     "It's the luteal phase. It's almost period week make sure to be extra nice!"
 ]
 
-@aiocron.crontab('0 10 * * 1-5')
-async def period_reminder(ctx):
-    channel = discord.utils.get(ctx.guild.channels, name='general')
-    week_of_the_year = datetime.datetime.now().isocalendar()[1]
-    message = period_messages[week_of_the_year % len(period_messages)]
-    await channel.send(message)
+@aiocron.crontab('0 10 * * 1-5', start=False, loop=loop)
+async def period_reminder():
+    for guild in bot.guilds:
+        channel = discord.utils.get(guild.channels, name='general')
+        if channel:
+            week_of_the_year = datetime.datetime.now().isocalendar()[1]
+            message = period_messages[week_of_the_year % len(period_messages)]
+            await channel.send(message)
+            break
 
 webserver.keep_alive()
-bot.run(token, log_handler=handler, log_level=logging.DEBUG)
+
+async def main():
+    async with bot:
+        period_reminder.start()
+        await bot.start(token, log_handler=handler, log_level=logging.DEBUG)
+
+loop.run_until_complete(main())
