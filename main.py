@@ -7,8 +7,6 @@ import datetime
 import discord
 from discord.ext import commands, tasks
 
-import aiocron
-
 from harmonies import harmonies as harmonies_scoring
 load_dotenv()
 
@@ -24,6 +22,9 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 @bot.event
 async def on_ready():
     print(f"We are ready to go in, {bot.user.name}")
+    # start weekly scheduled task when bot is ready
+    if not weekly_period_reminder.is_running():
+        weekly_period_reminder.start()
 
 @bot.event
 async def on_member_join(member):
@@ -89,12 +90,21 @@ period_messages = [
     "It's the luteal phase. It's almost period week make sure to be extra nice!"
 ]
 
-@aiocron.crontab('0 10 * * 1-5')
 async def period_reminder(ctx):
     channel = discord.utils.get(ctx.guild.channels, name='general')
     week_of_the_year = datetime.datetime.now().isocalendar()[1]
     message = period_messages[week_of_the_year % len(period_messages)]
     await channel.send(message)
+
+# Scheduled weekly reminder: runs at 09:00 local time daily, only posts on Mondays
+@tasks.loop(time=datetime.time(hour=10, minute=0))
+async def weekly_period_reminder():
+    week_of_the_year = datetime.datetime.now().isocalendar()[1]
+    message = period_messages[week_of_the_year % len(period_messages)]
+    for guild in bot.guilds:
+        channel = discord.utils.get(guild.channels, name='general')
+        if channel and datetime.datetime.now().weekday() == 0:  # Monday == 0
+            await channel.send(message)
 
 webserver.keep_alive()
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
