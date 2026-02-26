@@ -7,7 +7,8 @@ import datetime
 import discord
 from discord.ext import commands, tasks
 
-from harmonies import harmonies as harmonies_scoring
+from scoring import scoring as player_scoring
+
 load_dotenv()
 
 token = os.getenv('DISCORD_API_KEY')
@@ -38,8 +39,8 @@ async def on_message(message):
     await bot.process_commands(message)
 
 @bot.command()
-async def harmonies(ctx):  
-    await harmonies_scoring(ctx, bot)
+async def scoring(ctx, game: str): 
+    await player_scoring(ctx, game.capitalize(), bot)
 
 @bot.command()
 async def add(ctx, *groceries):
