@@ -90,16 +90,10 @@ period_messages = [
     "It's the luteal phase. It's almost period week make sure to be extra nice!"
 ]
 
-async def period_reminder(ctx):
-    channel = discord.utils.get(ctx.guild.channels, name='general')
-    week_of_the_year = datetime.datetime.now().isocalendar()[1]
-    message = period_messages[week_of_the_year % len(period_messages) - 1]
-    await channel.send(message)
-
 @tasks.loop(time=datetime.time(hour=18, minute=0))
 async def weekly_period_reminder():
     week_of_the_year = datetime.datetime.now().isocalendar()[1]
-    message = period_messages[week_of_the_year % len(period_messages)]
+    message = period_messages[week_of_the_year % len(period_messages) - 1]
     for guild in bot.guilds:
         channel = discord.utils.get(guild.channels, name='general')
         # if channel and datetime.datetime.now().weekday() == 0:  # Monday == 0
