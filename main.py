@@ -97,9 +97,8 @@ async def weekly_period_reminder():
     message = period_messages[week_of_the_year % len(period_messages) - 1]
     for guild in bot.guilds:
         channel = discord.utils.get(guild.channels, name='general')
-        # if channel and datetime.datetime.now().weekday() == 0:  # Monday == 0
-        #     await channel.send(message)
-        await channel.send(message)
+        if channel and datetime.datetime.now().weekday() == 0:  # Monday == 0
+            await channel.send(message)
 
 webserver.keep_alive()
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
