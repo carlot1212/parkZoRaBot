@@ -97,8 +97,15 @@ async def weekly_period_reminder():
     message = period_messages[week_of_the_year % len(period_messages) - 1]
     for guild in bot.guilds:
         channel = discord.utils.get(guild.channels, name='general')
-        if channel and datetime.datetime.now().weekday() == 0:  # Monday == 0
+        if channel and datetime.datetime.now().weekday() == 0:
             await channel.send(message)
+
+@tasks.loop(time=datetime.time(hour=18, minute=0))
+async def monthly_rent_reminder():
+    for guild in bot.guilds:
+        channel = discord.utils.get(guild.channels, name='general')
+        if channel and datetime.datetime.now().day == 1:
+            await channel.send("Don't forget to pay the rent today!")
 
 webserver.keep_alive()
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
