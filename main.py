@@ -1,3 +1,4 @@
+from concurrent.futures import thread
 import logging
 from dotenv import load_dotenv
 import os
@@ -43,46 +44,46 @@ async def scoring(ctx, game: str):
     await player_scoring(ctx, game.capitalize(), bot)
 
 @bot.command()
-async def add(ctx, *groceries):
-   if ctx.channel.name != 'groceries':
-      return
-   
-   groceries = [grocery.strip(',') for grocery in groceries]
+async def add(ctx):
+    if ctx.channel.name != 'groceries':
+        return
 
-   grocery_thread = discord.utils.get(ctx.channel.threads, name="Grocery List")
+    await ctx.channel.send("Whats grocery store would you like to add to?")
+    grocery_store_response = await bot.wait_for('message', timeout=300.0)
+    grocery_store = grocery_store_response.content.strip().capitalize()
 
-   if not grocery_thread:
-      grocery_thread = await ctx.channel.create_thread(name="Grocery List") 
+    await ctx.channel.send("What items would you like to add?")
+    grocery_items_response = await bot.wait_for('message', timeout=300.0)
+    grocery_items = [item.strip() for item in grocery_items_response.content.split(',')]
+
+    grocery_thread = discord.utils.get(ctx.channel.threads, name=f"{grocery_store} Grocery List")
+
+    if not grocery_thread:
+      grocery_thread = await ctx.channel.create_thread(name=f"{grocery_store} Grocery List") 
       for member in ctx.channel.members:
          await grocery_thread.add_user(member)
 
-   for grocery in groceries:
-       await grocery_thread.send(grocery)
+    for item in grocery_items:
+        await grocery_thread.send(item)
 
 @bot.command()
-async def remove(ctx, *groceries): 
+async def remove(ctx): 
     if ctx.channel.name != 'groceries':
         return
     
-    groceries = [grocery.strip(',') for grocery in groceries]
+    await ctx.channel.send("Whats grocery store would you like to remove from?")
+    grocery_store_response = await bot.wait_for('message', timeout=300.0)
+    grocery_store = grocery_store_response.content.strip().capitalize()
 
-    grocery_thread = discord.utils.get(ctx.channel.threads, name="Grocery List")
+    await ctx.channel.send("What items would you like to remove?")
+    grocery_items_response = await bot.wait_for('message', timeout=300.0)
+    grocery_items = [item.strip() for item in grocery_items_response.content.split(',')]
+
+    grocery_thread = discord.utils.get(ctx.channel.threads, name=f"{grocery_store} Grocery List")
 
     async for message in grocery_thread.history(limit=100):
-        if message.content in groceries:
+        if message.content in grocery_items:
             await message.delete()
-
-@bot.command()
-async def done(ctx):
-    if ctx.channel.name != 'Grocery List':
-        return
-    
-    await ctx.channel.edit(archived=True)
-
-    groceries_channel = discord.utils.get(ctx.guild.channels, name='groceries')
-
-    async for message in groceries_channel.history(limit=100):
-        await message.add_reaction('✅')
 
 period_messages = [
     "It's the menstrual phase. It's period week no more peenar.....unless!",
