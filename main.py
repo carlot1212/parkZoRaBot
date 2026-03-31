@@ -99,7 +99,7 @@ def get_time(time):
         time = datetime.time(hour=time + 8, minute=0)
     return time
 
-@tasks.loop(get_time(10))
+@tasks.loop(time=get_time(10))
 async def weekly_period_reminder():
     week_of_the_year = datetime.datetime.now().isocalendar()[1]
     message = period_messages[week_of_the_year % len(period_messages) - 1]
