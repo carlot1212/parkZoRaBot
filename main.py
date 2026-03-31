@@ -92,7 +92,14 @@ period_messages = [
     "It's the luteal phase. It's almost period week make sure to be extra nice!"
 ]
 
-@tasks.loop(time=datetime.time(hour=18, minute=0))
+def get_time(time):
+    if datetime.datetime.now().astimezone().dst() != datetime.timedelta(0):
+        time = datetime.time(hour=time + 9, minute=0)
+    else:
+        time = datetime.time(hour=time + 8, minute=0)
+    return time
+
+@tasks.loop(get_time(10))
 async def weekly_period_reminder():
     week_of_the_year = datetime.datetime.now().isocalendar()[1]
     message = period_messages[week_of_the_year % len(period_messages) - 1]
@@ -107,6 +114,19 @@ async def monthly_rent_reminder():
         channel = discord.utils.get(guild.channels, name='general')
         if channel and datetime.datetime.now().day == 1:
             await channel.send("Don't forget to pay the rent today!")
+
+habits = {'not_aozora' : ['stretch 🧘‍♂️', 'greens 🥬'],
+          'parkchou' : ['weigh ⚖️', 'list 🗒️', 'stretch 🧘‍♂️', 'greens 🥬', 'school 🏫', 'journal 📒', 'water 🍺', 'clean 🧹', 'gym 💪', 'weekly schedule 📆']}
+
+@tasks.loop(time=datetime.time(hour=16, minute=0))
+async def daily_habits_reminder():
+    for guild in bot.guilds:
+        channel = discord.utils.get(guild.channels, name='habits')
+        if channel:
+            for member in guild.members:
+                if not member.bot:
+                    await channel.send(f"{member.mention} Daily Habits: {', '.join(habits.get(member.name, []))}")
+
 
 webserver.keep_alive()
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
