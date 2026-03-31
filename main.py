@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 import webserver
 import datetime
+import time
 
 import discord
 from discord.ext import commands, tasks
@@ -92,12 +93,12 @@ period_messages = [
     "It's the luteal phase. It's almost period week make sure to be extra nice!"
 ]
 
-def get_time(time):
-    if datetime.datetime.now().astimezone().dst() != datetime.timedelta(0):
-        time = datetime.time(hour=time + 9, minute=0)
+def get_time(current_time):
+    if time.localtime().tm_isdst:
+        converted_time = datetime.time(hour=current_time + 9, minute=0)
     else:
-        time = datetime.time(hour=time + 8, minute=0)
-    return time
+        converted_time = datetime.time(hour=current_time + 8, minute=0)
+    return converted_time
 
 @tasks.loop(time=get_time(10))
 async def weekly_period_reminder():
