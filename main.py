@@ -93,12 +93,12 @@ period_messages = [
     "It's the luteal phase. It's almost period week make sure to be extra nice!"
 ]
 
-def get_time(current_time):
-    if time.localtime().tm_isdst:
-        converted_time = datetime.time(hour=current_time + 9, minute=0)
-    else:
-        converted_time = datetime.time(hour=current_time + 8, minute=0)
-    return converted_time
+# def get_time(current_time):
+#     if time.localtime().tm_isdst:
+#         converted_time = datetime.time(hour=current_time + 9, minute=0)
+#     else:
+#         converted_time = datetime.time(hour=current_time + 8, minute=0)
+#     return converted_time
 
 @tasks.loop(time=datetime.time(hour=18, minute=0))
 async def weekly_period_reminder():
