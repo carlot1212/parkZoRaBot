@@ -45,6 +45,10 @@ async def on_message(message):
     await bot.process_commands(message)
 
 @bot.command()
+async def ping(ctx):
+    await ctx.send("pong")  
+
+@bot.command()
 async def scoring(ctx, game: str): 
     await player_scoring(ctx, game.capitalize(), bot)
 
