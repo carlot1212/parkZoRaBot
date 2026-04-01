@@ -28,6 +28,10 @@ async def on_ready():
 
     if not weekly_period_reminder.is_running():
         weekly_period_reminder.start()
+    if not monthly_rent_reminder.is_running():
+        monthly_rent_reminder.start()
+    if not daily_habits_reminder.is_running():
+        daily_habits_reminder.start()
 
 @bot.event
 async def on_member_join(member):
@@ -117,7 +121,7 @@ async def monthly_rent_reminder():
             await channel.send("Don't forget to pay the rent today!")
 
 habits = {'not_aozora' : ['stretch 🧘‍♂️', 'greens 🥬'],
-          'parkchou' : ['weigh ⚖️', 'list 🗒️', 'stretch 🧘‍♂️', 'greens 🥬', 'school 🏫', 'journal 📒', 'water 🍺', 'clean 🧹', 'gym 💪', 'weekly schedule 📆']}
+          'parkchou' : ['weigh ⚖️', 'list 🗒️', 'stretch 🧘‍♂️', 'greens 🥬', 'water 🍺']}
 
 @tasks.loop(time=datetime.time(hour=16, minute=0))
 async def daily_habits_reminder():
