@@ -5,7 +5,7 @@ GAME_MAPPING = {
     "Harmonies": {"scoresheet": HARMONIES_SCORESHEET, "questions": HARMONIES_QUESTIONS}
 }
 
-async def scoring(ctx, game, bot):
+async def player_scoring(ctx, game, bot):
     thread = await ctx.message.create_thread(name=f"{game} Scoring")
 
     players = await get_players(bot, thread)

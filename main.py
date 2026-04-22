@@ -9,7 +9,10 @@ import time
 import discord
 from discord.ext import commands, tasks
 
-from scoring import scoring as player_scoring
+from scoring import player_scoring
+from groceries import add_groceries, remove_groceries
+from reminders import weekly_period_reminder
+
 
 load_dotenv()
 
@@ -26,8 +29,8 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 async def on_ready():
     print(f"We are ready to go in, {bot.user.name}")
 
-    if not weekly_period_reminder.is_running():
-        weekly_period_reminder.start()
+    if not period_reminder.is_running():
+        period_reminder.start()
     if not monthly_rent_reminder.is_running():
         monthly_rent_reminder.start()
     if not daily_habits_reminder.is_running():
@@ -54,52 +57,11 @@ async def scoring(ctx, game: str):
 
 @bot.command()
 async def add(ctx):
-    if ctx.channel.name != 'groceries':
-        return
-
-    await ctx.channel.send("Whats grocery store would you like to add to?")
-    grocery_store_response = await bot.wait_for('message', timeout=300.0)
-    grocery_store = grocery_store_response.content.strip().capitalize()
-
-    await ctx.channel.send("What items would you like to add?")
-    grocery_items_response = await bot.wait_for('message', timeout=300.0)
-    grocery_items = [item.strip() for item in grocery_items_response.content.split(',')]
-
-    grocery_thread = discord.utils.get(ctx.channel.threads, name=f"{grocery_store} Grocery List")
-
-    if not grocery_thread:
-      grocery_thread = await ctx.channel.create_thread(name=f"{grocery_store} Grocery List") 
-      for member in ctx.channel.members:
-         await grocery_thread.add_user(member)
-
-    for item in grocery_items:
-        await grocery_thread.send(item)
+    await add_groceries(ctx, bot)
 
 @bot.command()
 async def remove(ctx): 
-    if ctx.channel.name != 'groceries':
-        return
-    
-    await ctx.channel.send("Whats grocery store would you like to remove from?")
-    grocery_store_response = await bot.wait_for('message', timeout=300.0)
-    grocery_store = grocery_store_response.content.strip().capitalize()
-
-    await ctx.channel.send("What items would you like to remove?")
-    grocery_items_response = await bot.wait_for('message', timeout=300.0)
-    grocery_items = [item.strip() for item in grocery_items_response.content.split(',')]
-
-    grocery_thread = discord.utils.get(ctx.channel.threads, name=f"{grocery_store} Grocery List")
-
-    async for message in grocery_thread.history(limit=100):
-        if message.content in grocery_items:
-            await message.delete()
-
-period_messages = [
-    "It's the menstrual phase. It's period week no more peenar.....unless!",
-    "It's the follicular phase. She's going back to normal!",
-    "It's the ovulation phase. It's peenar time!",
-    "It's the luteal phase. It's almost period week make sure to be extra nice!"
-]
+    await remove_groceries(ctx, bot)
 
 # def get_time(current_time):
 #     if time.localtime().tm_isdst:
@@ -109,20 +71,17 @@ period_messages = [
 #     return converted_time
 
 @tasks.loop(time=datetime.time(hour=18, minute=0))
-async def weekly_period_reminder():
-    week_of_the_year = datetime.datetime.now().isocalendar()[1]
-    message = period_messages[week_of_the_year % len(period_messages) - 1]
-    for guild in bot.guilds:
-        channel = discord.utils.get(guild.channels, name='general')
-        if channel and datetime.datetime.now().weekday() == 0:
-            await channel.send(message)
+async def period_reminder():
+    await weekly_period_reminder(bot)
 
-@tasks.loop(time=datetime.time(hour=18, minute=0))
+@tasks.loop(time=datetime.time(hour=18, minute=30))  # Changed to 18:30 to avoid conflict
 async def monthly_rent_reminder():
-    for guild in bot.guilds:
-        channel = discord.utils.get(guild.channels, name='general')
-        if channel and datetime.datetime.now().day == 1:
-            await channel.send("Don't forget to pay the rent today!")
+    # Only run on the 1st of each month
+    if datetime.datetime.now().day == 1:
+        for guild in bot.guilds:
+            channel = discord.utils.get(guild.channels, name='general')
+            if channel:
+                await channel.send("Don't forget to pay the rent today!")
 
 habits = {'not_aozora' : ['stretch 🧘‍♂️', 'greens 🥬'],
           'parkchou' : ['weigh ⚖️', 'list 🗒️', 'stretch 🧘‍♂️', 'greens 🥬', 'water 🍺']}
