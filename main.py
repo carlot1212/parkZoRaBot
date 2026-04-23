@@ -11,7 +11,7 @@ from discord.ext import commands, tasks
 
 from scoring import player_scoring
 from groceries import add_groceries, remove_groceries
-from reminders import weekly_period_reminder
+from reminders import weekly_period_reminder, daily_habits_reminder
 
 
 load_dotenv()
@@ -83,17 +83,9 @@ async def monthly_rent_reminder():
             if channel:
                 await channel.send("Don't forget to pay the rent today!")
 
-habits = {'not_aozora' : ['stretch 🧘‍♂️', 'greens 🥬'],
-          'parkchou' : ['weigh ⚖️', 'list 🗒️', 'stretch 🧘‍♂️', 'greens 🥬', 'water 🍺']}
-
 @tasks.loop(time=datetime.time(hour=16, minute=0))
-async def daily_habits_reminder():
-    for guild in bot.guilds:
-        channel = discord.utils.get(guild.channels, name='habits')
-        if channel:
-            for member in guild.members:
-                if not member.bot:
-                    await channel.send(f"{member.mention} Daily Habits: {', '.join(habits.get(member.name, []))}")
+async def habits_reminder():
+    await daily_habits_reminder(bot)
 
 
 webserver.keep_alive()
