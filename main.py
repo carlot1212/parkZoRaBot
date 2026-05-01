@@ -33,8 +33,8 @@ async def on_ready():
         period_reminder.start()
     if not monthly_rent_reminder.is_running():
         monthly_rent_reminder.start()
-    if not daily_habits_reminder.is_running():
-        daily_habits_reminder.start()
+    if not habits_reminder.is_running():
+        habits_reminder.start()
 
 @bot.event
 async def on_member_join(member):
