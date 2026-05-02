@@ -11,14 +11,22 @@ PERIOD_MESSAGES = [
 HABITS = {'not_aozora' : ['stretch 🧘‍♂️', 'greens 🥬'],
           'parkchou' : ['weigh ⚖️', 'list 🗒️', 'stretch 🧘‍♂️', 'greens 🥬', 'water 🍺']}
 
+async def _send_to_channel_across_guilds(bot, channel_name: str, message: str) -> None:
+    for guild in bot.guilds:
+        channel = discord.utils.get(guild.channels, name=channel_name)
+        if channel:
+            await channel.send(message)
+
 async def weekly_period_reminder(bot):
     if datetime.datetime.now().weekday() == 0:
         week_of_the_year = datetime.datetime.now().isocalendar()[1]
         message = PERIOD_MESSAGES[week_of_the_year % len(PERIOD_MESSAGES)]
-        for guild in bot.guilds:
-            channel = discord.utils.get(guild.channels, name='general')
-            if channel:
-                await channel.send(message)
+        await _send_to_channel_across_guilds(bot, "general", message)
+
+async def monthly_rent_reminder(bot):
+    if datetime.datetime.now().day != 1:
+        return
+    await _send_to_channel_across_guilds(bot, "general", "Don't forget to pay the rent today!")
 
 async def daily_habits_reminder(bot):
     for guild in bot.guilds:

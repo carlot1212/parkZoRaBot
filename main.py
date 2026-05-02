@@ -11,7 +11,11 @@ from discord.ext import commands, tasks
 
 from scoring import player_scoring
 from groceries import add_groceries, remove_groceries
-from reminders import weekly_period_reminder, daily_habits_reminder
+from reminders import (
+    weekly_period_reminder,
+    daily_habits_reminder,
+    monthly_rent_reminder as send_monthly_rent_reminder,
+)
 
 
 load_dotenv()
@@ -31,8 +35,8 @@ async def on_ready():
 
     if not period_reminder.is_running():
         period_reminder.start()
-    if not monthly_rent_reminder.is_running():
-        monthly_rent_reminder.start()
+    if not monthly_rent_task.is_running():
+        monthly_rent_task.start()
     if not habits_reminder.is_running():
         habits_reminder.start()
 
@@ -75,13 +79,8 @@ async def period_reminder():
     await weekly_period_reminder(bot)
 
 @tasks.loop(time=datetime.time(hour=18, minute=30))  # Changed to 18:30 to avoid conflict
-async def monthly_rent_reminder():
-    # Only run on the 1st of each month
-    if datetime.datetime.now().day == 1:
-        for guild in bot.guilds:
-            channel = discord.utils.get(guild.channels, name='general')
-            if channel:
-                await channel.send("Don't forget to pay the rent today!")
+async def monthly_rent_task():
+    await send_monthly_rent_reminder(bot)
 
 @tasks.loop(time=datetime.time(hour=16, minute=0))
 async def habits_reminder():
