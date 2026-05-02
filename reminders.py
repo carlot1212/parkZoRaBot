@@ -8,7 +8,7 @@ PERIOD_MESSAGES = [
     "It's the luteal phase. It's almost period week make sure to be extra nice!"
 ]
 
-HABITS = {'not_aozora' : ['stretch 🧘‍♂️', 'greens 🥬'],
+HABITS = {'not_aozora' : ['stretch 🧘‍♂️', 'greens 🥬', 'protein 💪', 'aim labs 🔫'],
           'parkchou' : ['weigh ⚖️', 'list 🗒️', 'stretch 🧘‍♂️', 'greens 🥬', 'water 🍺']}
 
 async def _send_to_channel_across_guilds(bot, channel_name: str, message: str) -> None:
